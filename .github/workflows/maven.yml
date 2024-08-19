@@ -14,6 +14,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  SLACK_USERNAME: GithubActionsBot
+  SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  # Slack連携はここを参考にした。
+  # https://zenn.dev/wakkunn/articles/c6978bd2b5ca55
+
 jobs:
   build:
 
@@ -30,6 +37,22 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
-    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+    #-- Slack通知 --#
+    # 成功
+    - name: Slack Notification on Success
+      uses: rtCamp/action-slack-notify@v2
+      if: ${{ success() }}
+      env:
+        SLACK_TITLE: Deploy / Success
+        SLACK_COLOR: good
+        SLACK_MESSAGE: vxactor ビルド完了しました
+
+      # 失敗
+    - name: Slack Notification on Failure
+      uses: rtCamp/action-slack-notify@v2
+      if: ${{ failure() }}
+      env:
+        SLACK_TITLE: Deploy / Failure
+        SLACK_COLOR: danger
+        SLACK_MESSAGE: vxactor ビルド失敗しました
+
